@@ -7,11 +7,11 @@ package fabric
 
 import (
 	"fmt"
-	"text/template"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 )
@@ -60,7 +60,9 @@ func (f *Fabricable) Generate(rawTemplate string, path string, fileprefix string
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,
 		// Don't care + didn't ask (Not important if it is deprecated or not for the usecase of this)
-		"title": strings.Title,
+		"title":     strings.Title,
+		"camelCase": toCamelCase,
+		"snakeCase": toSnakeCase,
 	}
 
 	filetype, err := GetFileType(f.Language)
@@ -97,7 +99,7 @@ func (f *Fabricable) Generate(rawTemplate string, path string, fileprefix string
 			}
 		}
 	}
-	
+
 	rawFilename := f.Name + fileprefix
 	outputDir := filepath.Join(dir+"/"+path, strings.ToLower(rawFilename)+"."+filetype)
 
@@ -155,4 +157,31 @@ func (f *Fabricable) CreateFromArgs(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func toCamelCase(s string) string {
+	words := strings.FieldsFunc(s, func(r rune) bool {
+		return r == '_' || r == '-' || r == ' '
+	})
+
+	if len(words) == 0 {
+		return s
+	}
+
+	result := strings.ToLower(words[0])
+	for _, word := range words[1:] {
+		result += strings.Title(strings.ToLower(word))
+	}
+	return result
+}
+
+func toSnakeCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && (r >= 'A' && r <= 'Z') {
+			result.WriteRune('_')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToLower(result.String())
 }
