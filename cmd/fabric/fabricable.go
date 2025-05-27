@@ -7,7 +7,7 @@ package fabric
 
 import (
 	"fmt"
-	"html/template"
+	"text/template"
 	"os"
 	"path/filepath"
 	"strconv"
