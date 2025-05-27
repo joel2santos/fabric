@@ -26,7 +26,8 @@ export class {{.Name | title}}Model {
 
 	static fromJson(json: string): {{.Name | title}}Model {
 		try {
-			const data = JSON.parse(json) as {{.Name | title}}Data;
+			const rawData = JSON.parse(json);
+			const data = {{.Name | title}}Model._transformFromJson(rawData);
 			return {{.Name | title}}Model.create(data);
 		} catch (err) {
 			// TODO: Improve error handling.
@@ -43,7 +44,8 @@ export class {{.Name | title}}Model {
 	}
 
 	toJson(): string {
-		return JSON.stringify(this.toPlainObject());
+	  const jsonData = this._transformToJson(this.toPlainObject());
+		return JSON.stringify(jsonData);
 	}
 
 	toEntity(): {{.Name | title}} {
@@ -52,7 +54,7 @@ export class {{.Name | title}}Model {
 
 	update(changes: Partial<{{.Name | title}}Data>): {{.Name | title}}Model {
 		const updatedEntity = this._entity.update(changes);
-		return TestModel.fromEntity(updatedEntity);
+		return {{ .Name | title }}Model.fromEntity(updatedEntity);
 	}
 
 	equals(other: {{.Name | title}}Model): boolean {
@@ -83,6 +85,24 @@ export class {{.Name | title}}Model {
 		return {
 			isValid: errors.length === 0,
 			errors
+		};
+	}
+
+	private static _transformFromJson(rawData: any): {{.Name | title}}Data {
+		return {
+			// TODO: Check the types on this FromJson transformation
+			uid: rawData.uid || crypto.randomUUID(),
+			{{range .Params}}{{.Name}}: rawData.{{.Name | snakeCase }},
+			{{end}}
+		}
+	}
+
+	private _transformToJson(data: {{.Name | title}}Data & { uid: string }): any {
+		// TODO: Check the types on this ToJson transformation
+		return {
+			uid: data.uid,
+			{{range .Params}}{{.Name | snakeCase }}: data.{{ .Name }},
+			{{end}}
 		};
 	}
 }
